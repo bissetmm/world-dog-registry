@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: world-dog-postgres
+    environment:
+      POSTGRES_USER: world_dog
+      POSTGRES_PASSWORD: world_dog
+      POSTGRES_DB: world_dog_statistics
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U world_dog -d world_dog_statistics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
