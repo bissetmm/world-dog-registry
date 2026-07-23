@@ -46,6 +46,22 @@ GET /api/v1/unresolved-breed-aliases
 POST /api/v1/unresolved-breed-aliases/:id/resolve
 ```
 
+`import-jobs`、`source-documents`、`unresolved-breed-aliases` は管理系APIです。外部公開時は `ADMIN_API_KEY` を環境変数に設定し、`x-admin-api-key` または `Authorization: Bearer` ヘッダー付きで呼び出してください。
+
+## 外部公開
+
+低コスト公開は Neon Postgres + Render Web Service を想定しています。
+
+```text
+Neon Postgres
+↓
+Render Web Service
+↓
+NestJS API / Dashboard
+```
+
+手順は [docs/DEPLOYMENT_NEON_RENDER.md](/Users/mm/world-dog-registry-docs/docs/DEPLOYMENT_NEON_RENDER.md) を参照してください。
+
 再取り込み履歴を残したまま、最新 SourceDocument に属する統計だけを見る例:
 
 ```text

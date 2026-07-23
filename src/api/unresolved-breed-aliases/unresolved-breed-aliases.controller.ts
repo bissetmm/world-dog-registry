@@ -1,10 +1,20 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
 import { UnresolvedAliasStatus } from "@prisma/client";
+import { AdminApiKeyGuard } from "../../shared/security/admin-api-key.guard";
 import { ResolveUnresolvedBreedAliasRequestDto } from "./dto/resolve-unresolved-breed-alias-request.dto";
 import { UnresolvedBreedAliasResponseDto } from "./dto/unresolved-breed-alias-response.dto";
 import { UnresolvedBreedAliasesService } from "./unresolved-breed-aliases.service";
 
 @Controller("unresolved-breed-aliases")
+@UseGuards(AdminApiKeyGuard)
 export class UnresolvedBreedAliasesController {
   constructor(
     private readonly unresolvedBreedAliasesService: UnresolvedBreedAliasesService,

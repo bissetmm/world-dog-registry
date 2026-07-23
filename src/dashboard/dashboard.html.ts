@@ -66,6 +66,7 @@ export const dashboardHtml = `<!doctype html>
               <span id="chartCaption"></span>
             </div>
             <canvas id="trendCanvas" width="960" height="420"></canvas>
+            <div id="estimatedCountNote" class="data-note estimate-note" aria-label="Estimated count note"></div>
           </div>
           <div class="chart-panel">
             <div class="panel-heading">
@@ -73,6 +74,23 @@ export const dashboardHtml = `<!doctype html>
               <span id="rankingChartCaption"></span>
             </div>
             <canvas id="rankingCanvas" width="960" height="300"></canvas>
+            <div class="data-note" aria-label="Data comparison note">
+              <p>※ JKC・The Royal Kennel Clubは登録頭数、AKCは人気ランキングのため、国ごとの数値は同じ指標として単純比較せず、傾向を見る目的で参照しています。</p>
+              <p>Note: JKC and The Royal Kennel Club provide registration counts, while AKC provides popularity rankings. Figures across countries are shown for trend reference and should not be compared as the same metric.</p>
+            </div>
+          </div>
+          <div class="chart-panel">
+            <div class="panel-heading">
+              <h2>2025 Breed Positioning</h2>
+              <span id="positioningChartCaption"></span>
+            </div>
+            <canvas id="positioningCanvas" width="960" height="320"></canvas>
+            <div class="data-note" aria-label="Positioning chart note">
+              <p>※ この図はDBに登録済みの犬種別登録データのみを対象にしています。全犬種データの取り込み範囲が広がると、表示される位置づけも更新されます。</p>
+              <p>Note: This chart uses only breed registration rows currently stored in the database. Positioning will update as broader all-breed source data is imported.</p>
+              <p>※ JKC/FCIの第5グループとThe Royal Kennel ClubのWorking/Pastoralなどの犬種グループ分類は一致しないため、グループ名は出典団体ごとの分類として扱っています。</p>
+              <p>Note: JKC/FCI Group 5 and The Royal Kennel Club groups such as Working/Pastoral are not identical classification systems, so group labels are treated as source-specific categories.</p>
+            </div>
           </div>
         </div>
 

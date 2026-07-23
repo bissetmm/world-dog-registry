@@ -53,18 +53,17 @@ export class AkcPopularityRankingParser {
         return;
       }
 
-      const rank = Number(cells[0]);
-      const breedName = cells[1];
+      const rankingCell = this.extractRankAndBreed(cells[0], cells[1]);
 
-      if (!Number.isInteger(rank) || !breedName) {
+      if (!rankingCell) {
         return;
       }
 
       rows.push({
         sourceClubCode: "AKC",
         year,
-        breedName,
-        rank,
+        breedName: rankingCell.breedName,
+        rank: rankingCell.rank,
         rawText: cells.slice(0, 2).join(" | "),
       });
     });
@@ -76,30 +75,86 @@ export class AkcPopularityRankingParser {
     line: string,
     year: number,
   ): ParsedPopularityRankingRow | null {
-    const match = line.match(/^(\d{1,3})\s+(.+)$/);
+    const rankFirstMatch = line.match(/^(\d{1,3})\s+(.+)$/);
 
-    if (!match) {
+    if (rankFirstMatch) {
+      return this.createRow({
+        breedName: rankFirstMatch[2],
+        rankText: rankFirstMatch[1],
+        rawText: line,
+        year,
+      });
+    }
+
+    const breedFirstMatch = line.match(/^(.+?)\s+(\d{1,3})$/);
+
+    if (!breedFirstMatch) {
       return null;
     }
 
-    const rank = Number(match[1]);
-    const breedName = match[2].trim();
+    return this.createRow({
+      breedName: breedFirstMatch[1],
+      rankText: breedFirstMatch[2],
+      rawText: line,
+      year,
+    });
+  }
 
-    if (
-      !Number.isInteger(rank) ||
-      breedName.length === 0 ||
-      breedName === "Rank Breed" ||
-      breedName.includes("Top 10 Dog Breeds")
-    ) {
+  private extractRankAndBreed(
+    firstCell: string,
+    secondCell: string,
+  ): { rank: number; breedName: string } | null {
+    const rankFirst = this.parseRankAndBreed(firstCell, secondCell);
+
+    if (rankFirst) {
+      return rankFirst;
+    }
+
+    return this.parseRankAndBreed(secondCell, firstCell);
+  }
+
+  private parseRankAndBreed(
+    rankText: string,
+    breedName: string,
+  ): { rank: number; breedName: string } | null {
+    const rank = Number(rankText);
+    const normalizedBreedName = breedName.trim();
+
+    if (!Number.isInteger(rank) || this.shouldSkipBreedName(normalizedBreedName)) {
+      return null;
+    }
+
+    return { rank, breedName: normalizedBreedName };
+  }
+
+  private createRow(input: {
+    breedName: string;
+    rankText: string;
+    rawText: string;
+    year: number;
+  }): ParsedPopularityRankingRow | null {
+    const parsed = this.parseRankAndBreed(input.rankText, input.breedName);
+
+    if (!parsed) {
       return null;
     }
 
     return {
       sourceClubCode: "AKC",
-      year,
-      breedName,
-      rank,
-      rawText: line,
+      year: input.year,
+      breedName: parsed.breedName,
+      rank: parsed.rank,
+      rawText: input.rawText,
     };
+  }
+
+  private shouldSkipBreedName(breedName: string): boolean {
+    return (
+      breedName.length === 0 ||
+      breedName === "Rank Breed" ||
+      breedName === "Breed 2020 Rank" ||
+      breedName === "BREED 2021" ||
+      breedName.includes("Top 10 Dog Breeds")
+    );
   }
 }

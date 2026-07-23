@@ -17,9 +17,9 @@ import { RegistrationStatisticValidator } from "../../validators/registration-st
 
 const JKC_REGISTRATION_STATISTICS_URL =
   "https://www.jkc.or.jp/registr-statistics/";
-const PARSER_VERSION = "jkc-retriever-official-import@0.1.0";
+const PARSER_VERSION = "jkc-target-breed-official-import@0.2.0";
 
-const RETRIEVER_BREED_NAMES = [
+const TARGET_BREED_NAMES = [
   "チェサピーク・ベイ・レトリーバー",
   "チェサピークベイレトリーバー",
   "カーリーコーテッド・レトリーバー",
@@ -32,10 +32,13 @@ const RETRIEVER_BREED_NAMES = [
   "ラブラドールレトリーバー",
   "ノヴァ・スコシア・ダック・トーリング・レトリーバー",
   "ノヴァスコシアダックトーリングレトリーバー",
+  "シベリアン・ハスキー",
+  "シベリアンハスキー",
+  "サモエド",
 ];
 
-const RETRIEVER_BREED_NAME_KEYS = new Set(
-  RETRIEVER_BREED_NAMES.map((breedName) => toBreedNameKey(breedName)),
+const TARGET_BREED_NAME_KEYS = new Set(
+  TARGET_BREED_NAMES.map((breedName) => toBreedNameKey(breedName)),
 );
 
 type ImportArgs = {
@@ -73,14 +76,14 @@ async function main(): Promise<void> {
   });
 
   try {
-    const result = await importRecentJkcRetrieverStatistics(args, app);
+    const result = await importRecentJkcTargetBreedStatistics(args, app);
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } finally {
     await app.close();
   }
 }
 
-async function importRecentJkcRetrieverStatistics(
+async function importRecentJkcTargetBreedStatistics(
   args: ImportArgs,
   app: INestApplicationContext,
 ): Promise<ImportResult> {
@@ -154,7 +157,7 @@ async function importJkcStatisticsPage(
       sourceFormat: SourceFormat.HTML,
       checksum,
       year: page.year,
-      title: `JKC ${page.year} retriever registration statistics`,
+      title: `JKC ${page.year} target breed registration statistics`,
       parserVersion: PARSER_VERSION,
       retrievedAt: downloadedFile.retrievedAt,
     });
@@ -163,9 +166,9 @@ async function importJkcStatisticsPage(
       downloadedFile.content.toString("utf8"),
       page.year,
     );
-    const retrieverRows = parsedRows.filter(isRetrieverRow);
+    const targetBreedRows = parsedRows.filter(isTargetBreedRow);
     const normalizedRows =
-      await normalizer.normalizeRegistrationRows(retrieverRows);
+      await normalizer.normalizeRegistrationRows(targetBreedRows);
     const validationResult = validator.validate(normalizedRows);
     const rowsImported = await importer.importRows({
       sourceClubCode: "JKC",
@@ -196,7 +199,7 @@ async function importJkcStatisticsPage(
       importJobId: importJob.id,
       sourceDocumentId: sourceDocument.id,
       rowsParsed: parsedRows.length,
-      rowsMatched: retrieverRows.length,
+      rowsMatched: targetBreedRows.length,
       rowsImported,
       unresolvedBreedAliases,
       warnings: validationResult.warnings,
@@ -261,8 +264,8 @@ function discoverJkcStatisticsPages(
     .sort((left, right) => right.year - left.year);
 }
 
-function isRetrieverRow(row: ParsedRegistrationRow): boolean {
-  return RETRIEVER_BREED_NAME_KEYS.has(toBreedNameKey(row.breedName));
+function isTargetBreedRow(row: ParsedRegistrationRow): boolean {
+  return TARGET_BREED_NAME_KEYS.has(toBreedNameKey(row.breedName));
 }
 
 function toBreedNameKey(breedName: string): string {

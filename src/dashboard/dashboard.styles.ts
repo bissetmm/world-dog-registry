@@ -1,15 +1,15 @@
 export const dashboardStyles = `:root {
-  color-scheme: light;
-  --background: #f7f8fa;
-  --surface: #ffffff;
-  --surface-muted: #f1f5f7;
-  --ink: #1d252c;
-  --muted: #60707d;
-  --line: #d9e0e5;
-  --accent: #176b87;
-  --accent-2: #b44d3b;
-  --ok: #2f7d52;
-  --shadow: 0 12px 30px rgba(29, 37, 44, 0.08);
+  color-scheme: dark;
+  --background: #10151c;
+  --surface: #171e27;
+  --surface-muted: #202a35;
+  --ink: #eef4f8;
+  --muted: #9aaab6;
+  --line: #344250;
+  --accent: #4fb7c5;
+  --accent-2: #e07861;
+  --ok: #62c587;
+  --shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
@@ -19,7 +19,10 @@ export const dashboardStyles = `:root {
 
 body {
   margin: 0;
-  background: var(--background);
+  background:
+    radial-gradient(circle at 16% 0%, rgba(79, 183, 197, 0.14), transparent 34%),
+    radial-gradient(circle at 82% 10%, rgba(224, 120, 97, 0.1), transparent 30%),
+    var(--background);
   color: var(--ink);
 }
 
@@ -160,7 +163,7 @@ button {
   border-radius: 6px;
   padding: 0 16px;
   background: var(--accent);
-  color: #fff;
+  color: #071014;
   font-weight: 700;
   cursor: pointer;
 }
@@ -240,7 +243,24 @@ canvas {
   height: 360px;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: linear-gradient(#ffffff, #f8fafb);
+  background: linear-gradient(#141c25, #111820);
+}
+
+.data-note {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.data-note p {
+  margin: 0;
 }
 
 .side-panel {
@@ -328,6 +348,10 @@ tbody tr:last-child td {
     display: grid;
   }
 
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
   .control-panel {
     grid-template-columns: 1fr;
   }
@@ -345,6 +369,15 @@ tbody tr:last-child td {
 
   .metrics-grid {
     grid-template-columns: 1fr;
+  }
+
+  .chart-panel {
+    overflow-x: auto;
+    padding: 12px;
+  }
+
+  .chart-panel canvas {
+    min-width: 680px;
   }
 
   canvas {

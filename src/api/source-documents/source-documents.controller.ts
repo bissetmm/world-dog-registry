@@ -1,8 +1,10 @@
-import { Controller, Get, Param, Query } from "@nestjs/common";
+import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
+import { AdminApiKeyGuard } from "../../shared/security/admin-api-key.guard";
 import { SourceDocumentResponseDto } from "./dto/source-document-response.dto";
 import { SourceDocumentsService } from "./source-documents.service";
 
 @Controller("source-documents")
+@UseGuards(AdminApiKeyGuard)
 export class SourceDocumentsController {
   constructor(
     private readonly sourceDocumentsService: SourceDocumentsService,

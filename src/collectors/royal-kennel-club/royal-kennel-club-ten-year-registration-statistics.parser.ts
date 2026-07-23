@@ -29,7 +29,9 @@ export class RoyalKennelClubTenYearRegistrationStatisticsParser {
   }
 
   private parseYears(content: string): number[] {
-    const headerMatch = content.match(/GUNDOG\s+((?:20\d{2}\s+){2,}20\d{2})/i);
+    const headerMatch = content.match(
+      /\b(?:HOUND|WORKING|TERRIER|GUNDOG|PASTORAL|UTILITY|TOY)\s+((?:20\d{2}\s+){2,}20\d{2})/i,
+    );
 
     if (!headerMatch) {
       return [];
@@ -44,7 +46,11 @@ export class RoyalKennelClubTenYearRegistrationStatisticsParser {
     line: string,
     years: number[],
   ): ParsedRegistrationRow[] {
-    if (!line || line.startsWith("GUNDOG ") || line.startsWith("TOTAL ")) {
+    if (
+      !line ||
+      /^(HOUND|WORKING|TERRIER|GUNDOG|PASTORAL|UTILITY|TOY)\s/i.test(line) ||
+      line.startsWith("TOTAL ")
+    ) {
       return [];
     }
 

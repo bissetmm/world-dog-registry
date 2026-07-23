@@ -17,7 +17,7 @@ import { RegistrationStatisticValidator } from "../../validators/registration-st
 
 const RKC_BREED_STATISTICS_URL =
   "https://www.royalkennelclub.com/about-us/resources/breed-registration-statistics/";
-const PARSER_VERSION = "rkc-retriever-ten-year-official-import@0.1.0";
+const PARSER_VERSION = "rkc-target-breed-ten-year-official-import@0.2.0";
 
 const RETRIEVER_BREED_NAMES = [
   "Retriever (Chesapeake Bay)",
@@ -28,11 +28,44 @@ const RETRIEVER_BREED_NAMES = [
   "Retriever (Nova Scotia Duck Tolling)",
 ];
 
+const RKC_TARGET_GROUPS: RkcTargetGroup[] = [
+  {
+    groupCode: "gundog",
+    groupLabel: "Gundog",
+    fileName: "rkc-ten-year-breeds-stats-gundog.pdf",
+    targetBreedNames: RETRIEVER_BREED_NAMES,
+  },
+  {
+    groupCode: "working",
+    groupLabel: "Working",
+    fileName: "rkc-ten-year-breeds-stats-working.pdf",
+    targetBreedNames: ["Siberian Husky"],
+  },
+  {
+    groupCode: "pastoral",
+    groupLabel: "Pastoral",
+    fileName: "rkc-ten-year-breeds-stats-pastoral.pdf",
+    targetBreedNames: ["Samoyed"],
+  },
+];
+
+type RkcTargetGroup = {
+  groupCode: string;
+  groupLabel: string;
+  fileName: string;
+  targetBreedNames: string[];
+};
+
+type SourceDocumentResult = {
+  groupLabel: string;
+  sourcePdfUrl: string;
+  sourceDocumentId: string;
+};
+
 type ImportResult = {
   sourceIndexUrl: string;
-  sourcePdfUrl: string;
   importJobId: string;
-  sourceDocumentId?: string;
+  sourceDocuments: SourceDocumentResult[];
   years: number[];
   rowsParsed: number;
   rowsMatched: number;
@@ -48,14 +81,14 @@ async function main(): Promise<void> {
   });
 
   try {
-    const result = await importRkcRetrieverStatistics(app);
+    const result = await importRkcTargetBreedStatistics(app);
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
   } finally {
     await app.close();
   }
 }
 
-async function importRkcRetrieverStatistics(
+async function importRkcTargetBreedStatistics(
   app: INestApplicationContext,
 ): Promise<ImportResult> {
   const downloader = app.get(HttpDownloader, { strict: false });
@@ -83,80 +116,105 @@ async function importRkcRetrieverStatistics(
 
   try {
     const indexFile = await downloader.download(RKC_BREED_STATISTICS_URL);
-    const sourcePdfUrl = discoverTenYearGundogPdfUrl(
-      indexFile.content.toString("utf8"),
-      RKC_BREED_STATISTICS_URL,
-    );
-    const downloadedPdf = await downloader.download(sourcePdfUrl);
-    const checksum = checksumService.sha256(downloadedPdf.content);
-    const fileName = "rkc-ten-year-breeds-stats-gundog.pdf";
-    const savedFilePath = await rawFileStorageService.save({
-      sourceClubCode: "RKC",
-      fileName,
-      content: downloadedPdf.content,
-    });
+    const indexContent = indexFile.content.toString("utf8");
     const kennelClub = await kennelClubRepository.findByCode("RKC");
 
     if (!kennelClub) {
       throw new Error("KennelClub not found: RKC");
     }
 
-    const sourceDocument = await sourceDocumentRepository.create({
-      kennelClub: { connect: { id: kennelClub.id } },
-      importJob: { connect: { id: importJob.id } },
-      sourceUrl: sourcePdfUrl,
-      filePath: savedFilePath,
-      fileName,
-      fileType: downloadedPdf.contentType ?? "application/pdf",
-      sourceFormat: SourceFormat.PDF,
-      checksum,
-      year: 2025,
-      title: "RKC ten-year gundog breed registration statistics",
-      parserVersion: PARSER_VERSION,
-      retrievedAt: downloadedPdf.retrievedAt,
-    });
-    const parsedRows = await parser.parsePdf(downloadedPdf.content);
-    const retrieverRows = parsedRows.filter(isRetrieverRow);
-    const normalizedRows =
-      await normalizer.normalizeRegistrationRows(retrieverRows);
-    const validationResult = validator.validate(normalizedRows);
-    const rowsImported = await importer.importRows({
-      sourceClubCode: "RKC",
-      sourceDocumentId: sourceDocument.id,
-      rows: validationResult.validRows,
-    });
-    const unresolvedBreedAliases = await importer.saveUnresolvedAliases({
-      sourceClubCode: "RKC",
-      sourceDocumentId: sourceDocument.id,
-      rows: normalizedRows,
-    });
+    const sourceDocuments: SourceDocumentResult[] = [];
+    const years = new Set<number>();
+    const warnings: string[] = [];
+    const errors: string[] = [];
+    let rowsParsed = 0;
+    let rowsMatched = 0;
+    let rowsImported = 0;
+    let unresolvedBreedAliases = 0;
+
+    for (const targetGroup of RKC_TARGET_GROUPS) {
+      const sourcePdfUrl = discoverTenYearBreedPdfUrl(
+        indexContent,
+        RKC_BREED_STATISTICS_URL,
+        targetGroup,
+      );
+      const downloadedPdf = await downloader.download(sourcePdfUrl);
+      const checksum = checksumService.sha256(downloadedPdf.content);
+      const savedFilePath = await rawFileStorageService.save({
+        sourceClubCode: "RKC",
+        fileName: targetGroup.fileName,
+        content: downloadedPdf.content,
+      });
+      const sourceDocument = await sourceDocumentRepository.create({
+        kennelClub: { connect: { id: kennelClub.id } },
+        importJob: { connect: { id: importJob.id } },
+        sourceUrl: sourcePdfUrl,
+        filePath: savedFilePath,
+        fileName: targetGroup.fileName,
+        fileType: downloadedPdf.contentType ?? "application/pdf",
+        sourceFormat: SourceFormat.PDF,
+        checksum,
+        year: 2025,
+        title: `RKC ten-year ${targetGroup.groupCode} breed registration statistics`,
+        parserVersion: PARSER_VERSION,
+        retrievedAt: downloadedPdf.retrievedAt,
+      });
+      const parsedRows = await parser.parsePdf(downloadedPdf.content);
+      const targetRows = parsedRows.filter((row) =>
+        isTargetBreedRow(row, targetGroup.targetBreedNames),
+      );
+      const normalizedRows =
+        await normalizer.normalizeRegistrationRows(targetRows);
+      const validationResult = validator.validate(normalizedRows);
+      const importedCount = await importer.importRows({
+        sourceClubCode: "RKC",
+        sourceDocumentId: sourceDocument.id,
+        rows: validationResult.validRows,
+      });
+      const unresolvedCount = await importer.saveUnresolvedAliases({
+        sourceClubCode: "RKC",
+        sourceDocumentId: sourceDocument.id,
+        rows: normalizedRows,
+      });
+
+      sourceDocuments.push({
+        groupLabel: targetGroup.groupLabel,
+        sourcePdfUrl,
+        sourceDocumentId: sourceDocument.id,
+      });
+      targetRows.forEach((row) => years.add(row.year));
+      rowsParsed += parsedRows.length;
+      rowsMatched += targetRows.length;
+      rowsImported += importedCount;
+      unresolvedBreedAliases += unresolvedCount;
+      warnings.push(...validationResult.warnings);
+      errors.push(...validationResult.errors);
+    }
+
     const status =
-      validationResult.errors.length > 0 || unresolvedBreedAliases > 0
+      errors.length > 0 || unresolvedBreedAliases > 0
         ? ImportJobStatus.partial_success
         : ImportJobStatus.success;
 
     await importJobRepository.updateStatus(importJob.id, status, {
-      rowsParsed: parsedRows.length,
+      rowsParsed,
       rowsImported,
-      warnings: validationResult.warnings,
-      errors: validationResult.errors,
+      warnings,
+      errors,
       finishedAt: new Date(),
     });
 
     return {
       sourceIndexUrl: RKC_BREED_STATISTICS_URL,
-      sourcePdfUrl,
       importJobId: importJob.id,
-      sourceDocumentId: sourceDocument.id,
-      years: [...new Set(retrieverRows.map((row) => row.year))].sort(
-        (left, right) => left - right,
-      ),
-      rowsParsed: parsedRows.length,
-      rowsMatched: retrieverRows.length,
+      sourceDocuments,
+      years: [...years].sort((left, right) => left - right),
+      rowsParsed,
+      rowsMatched,
       rowsImported,
       unresolvedBreedAliases,
-      warnings: validationResult.warnings,
-      errors: validationResult.errors,
+      warnings,
+      errors,
     };
   } catch (error: unknown) {
     const message =
@@ -175,8 +233,13 @@ async function importRkcRetrieverStatistics(
   }
 }
 
-function discoverTenYearGundogPdfUrl(content: string, baseUrl: string): string {
+function discoverTenYearBreedPdfUrl(
+  content: string,
+  baseUrl: string,
+  targetGroup: RkcTargetGroup,
+): string {
   const $ = cheerio.load(content);
+  const groupCode = targetGroup.groupCode.toLowerCase();
   const directLink = $("a")
     .toArray()
     .find((element) => {
@@ -184,8 +247,8 @@ function discoverTenYearGundogPdfUrl(content: string, baseUrl: string): string {
       const title = $(element).attr("title")?.toLowerCase() ?? "";
 
       return (
-        href.includes("10-yearly-breeds-stats-gundog") ||
-        title.includes("10 yearly breeds stats gundog")
+        href.includes(`10-yearly-breeds-stats-${groupCode}`) ||
+        title.includes(`10 yearly breeds stats ${groupCode}`)
       );
     });
   const directHref = directLink ? $(directLink).attr("href") : undefined;
@@ -207,11 +270,13 @@ function discoverTenYearGundogPdfUrl(content: string, baseUrl: string): string {
   let current = $(tenYearHeading).parent().next();
 
   while (current.length > 0 && current[0].tagName !== "h2") {
-    const gundogLink = current
+    const groupLink = current
       .find("a")
       .toArray()
-      .find((element) => $(element).text().trim().toLowerCase() === "gundog");
-    const href = gundogLink ? $(gundogLink).attr("href") : undefined;
+      .find(
+        (element) => $(element).text().trim().toLowerCase() === groupCode,
+      );
+    const href = groupLink ? $(groupLink).attr("href") : undefined;
 
     if (href) {
       return new URL(href, baseUrl).toString();
@@ -220,11 +285,14 @@ function discoverTenYearGundogPdfUrl(content: string, baseUrl: string): string {
     current = current.next();
   }
 
-  throw new Error("RKC ten-year gundog PDF link was not found");
+  throw new Error(`RKC ten-year ${groupCode} PDF link was not found`);
 }
 
-function isRetrieverRow(row: ParsedRegistrationRow): boolean {
-  return RETRIEVER_BREED_NAMES.includes(row.breedName);
+function isTargetBreedRow(
+  row: ParsedRegistrationRow,
+  targetBreedNames: string[],
+): boolean {
+  return targetBreedNames.includes(row.breedName);
 }
 
 void main().catch((error: unknown) => {

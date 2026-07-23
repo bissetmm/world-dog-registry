@@ -39,4 +39,30 @@ describe("RoyalKennelClubTenYearRegistrationStatisticsParser", () => {
         "Retriever (Golden) 7,232 7,846 7,794 8,422 8,653 11,808 11,075 10,447 10,201 9,976",
     });
   });
+
+  it("expands ten-year RKC non-gundog statistics into yearly rows", () => {
+    const parser = new RoyalKennelClubTenYearRegistrationStatisticsParser();
+    const rows = parser.parseText(`
+      COMPARATIVE TABLES OF REGISTRATIONS FOR THE YEARS 2016 - 2025 INCLUSIVE
+      WORKING 2016 2017 2018 2019 2020 2021 2022 2023 2024 2025
+      Siberian Husky 747 737 634 397 391 480 336 238 310 197
+      TOTAL 14,361 13,938 13,407 13,064 12,752 16,772 13,391 11,354 9,609 8,186
+    `);
+
+    expect(rows).toHaveLength(10);
+    expect(rows[0]).toEqual({
+      sourceClubCode: "RKC",
+      year: 2016,
+      breedName: "Siberian Husky",
+      registrationCount: 747,
+      rawText: "Siberian Husky 747 737 634 397 391 480 336 238 310 197",
+    });
+    expect(rows.at(-1)).toEqual({
+      sourceClubCode: "RKC",
+      year: 2025,
+      breedName: "Siberian Husky",
+      registrationCount: 197,
+      rawText: "Siberian Husky 747 737 634 397 391 480 336 238 310 197",
+    });
+  });
 });

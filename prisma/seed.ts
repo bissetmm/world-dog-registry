@@ -88,12 +88,14 @@ async function main(): Promise<void> {
   void rkc;
   void fci;
 
-  const retrieverBreeds: SeedBreed[] = [
+  const seedBreeds: SeedBreed[] = [
     {
       id: "seed-chesapeake-bay-retriever",
       fciNumber: 263,
       nameEn: "Chesapeake Bay Retriever",
       nameJa: "チェサピーク・ベイ・レトリーバー",
+      groupName: "Retrievers",
+      fciGroup: "Group 8",
       origin: "United States",
       aliases: [
         { aliasName: "Chesapeake Bay Retriever", languageCode: "en" },
@@ -108,6 +110,7 @@ async function main(): Promise<void> {
       akcAliases: [
         { aliasName: "Chesapeake Bay Retriever", languageCode: "en" },
         { aliasName: "Chesapeake Bay Retrievers", languageCode: "en" },
+        { aliasName: "Retrievers (Chesapeake Bay)", languageCode: "en" },
       ],
     },
     {
@@ -115,6 +118,8 @@ async function main(): Promise<void> {
       fciNumber: 110,
       nameEn: "Curly-Coated Retriever",
       nameJa: "カーリーコーテッド・レトリーバー",
+      groupName: "Retrievers",
+      fciGroup: "Group 8",
       origin: "United Kingdom",
       aliases: [
         { aliasName: "Curly Coated Retriever", languageCode: "en" },
@@ -129,6 +134,7 @@ async function main(): Promise<void> {
       akcAliases: [
         { aliasName: "Curly-Coated Retriever", languageCode: "en" },
         { aliasName: "Curly-Coated Retrievers", languageCode: "en" },
+        { aliasName: "Retrievers (Curly-Coated)", languageCode: "en" },
       ],
     },
     {
@@ -136,6 +142,8 @@ async function main(): Promise<void> {
       fciNumber: 121,
       nameEn: "Flat-Coated Retriever",
       nameJa: "フラットコーテッド・レトリーバー",
+      groupName: "Retrievers",
+      fciGroup: "Group 8",
       origin: "United Kingdom",
       aliases: [
         { aliasName: "Flat Coated Retriever", languageCode: "en" },
@@ -150,6 +158,7 @@ async function main(): Promise<void> {
       akcAliases: [
         { aliasName: "Flat-Coated Retriever", languageCode: "en" },
         { aliasName: "Flat-Coated Retrievers", languageCode: "en" },
+        { aliasName: "Retrievers (Flat-Coated)", languageCode: "en" },
       ],
     },
     {
@@ -157,6 +166,8 @@ async function main(): Promise<void> {
       fciNumber: 111,
       nameEn: "Golden Retriever",
       nameJa: "ゴールデン・レトリーバー",
+      groupName: "Retrievers",
+      fciGroup: "Group 8",
       origin: "United Kingdom",
       aliases: [
         { aliasName: "Golden Retriever", languageCode: "en" },
@@ -169,6 +180,7 @@ async function main(): Promise<void> {
       akcAliases: [
         { aliasName: "Golden Retriever", languageCode: "en" },
         { aliasName: "Golden Retrievers", languageCode: "en" },
+        { aliasName: "Retrievers (Golden)", languageCode: "en" },
       ],
     },
     {
@@ -176,6 +188,8 @@ async function main(): Promise<void> {
       fciNumber: 122,
       nameEn: "Labrador Retriever",
       nameJa: "ラブラドール・レトリーバー",
+      groupName: "Retrievers",
+      fciGroup: "Group 8",
       origin: "United Kingdom",
       aliases: [
         { aliasName: "Labrador Retriever", languageCode: "en" },
@@ -188,6 +202,7 @@ async function main(): Promise<void> {
       akcAliases: [
         { aliasName: "Labrador Retriever", languageCode: "en" },
         { aliasName: "Labrador Retrievers", languageCode: "en" },
+        { aliasName: "Retrievers (Labrador)", languageCode: "en" },
       ],
     },
     {
@@ -195,6 +210,8 @@ async function main(): Promise<void> {
       fciNumber: 312,
       nameEn: "Nova Scotia Duck Tolling Retriever",
       nameJa: "ノヴァ・スコシア・ダック・トーリング・レトリーバー",
+      groupName: "Retrievers",
+      fciGroup: "Group 8",
       origin: "Canada",
       aliases: [
         {
@@ -227,19 +244,57 @@ async function main(): Promise<void> {
           aliasName: "Nova Scotia Duck Tolling Retrievers",
           languageCode: "en",
         },
+        {
+          aliasName: "Retrievers (Nova Scotia Duck Tolling)",
+          languageCode: "en",
+        },
       ],
+    },
+    {
+      id: "seed-siberian-husky",
+      fciNumber: 270,
+      nameEn: "Siberian Husky",
+      nameJa: "シベリアン・ハスキー",
+      groupName: "Spitz and Primitive types",
+      fciGroup: "Group 5",
+      origin: "United States",
+      aliases: [
+        { aliasName: "Siberian Husky", languageCode: "en" },
+        { aliasName: "シベリアンハスキー", languageCode: "ja" },
+      ],
+      jkcAliases: [
+        { aliasName: "シベリアン・ハスキー", languageCode: "ja" },
+      ],
+      rkcAliases: [{ aliasName: "Siberian Husky", languageCode: "en" }],
+      akcAliases: [],
+    },
+    {
+      id: "seed-samoyed",
+      fciNumber: 212,
+      nameEn: "Samoyed",
+      nameJa: "サモエド",
+      groupName: "Spitz and Primitive types",
+      fciGroup: "Group 5",
+      origin: "Russia",
+      aliases: [
+        { aliasName: "Samoyed", languageCode: "en" },
+        { aliasName: "サモエド", languageCode: "ja" },
+      ],
+      jkcAliases: [{ aliasName: "サモエド", languageCode: "ja" }],
+      rkcAliases: [{ aliasName: "Samoyed", languageCode: "en" }],
+      akcAliases: [],
     },
   ];
 
-  for (const breed of retrieverBreeds) {
+  for (const breed of seedBreeds) {
     const savedBreed = await prisma.breed.upsert({
       where: { id: breed.id },
       update: {
         fciNumber: breed.fciNumber,
         nameEn: breed.nameEn,
         nameJa: breed.nameJa,
-        groupName: "Retrievers",
-        fciGroup: "Group 8",
+        groupName: breed.groupName,
+        fciGroup: breed.fciGroup,
         origin: breed.origin,
       },
       create: {
@@ -247,8 +302,8 @@ async function main(): Promise<void> {
         fciNumber: breed.fciNumber,
         nameEn: breed.nameEn,
         nameJa: breed.nameJa,
-        groupName: "Retrievers",
-        fciGroup: "Group 8",
+        groupName: breed.groupName,
+        fciGroup: breed.fciGroup,
         origin: breed.origin,
       },
     });
@@ -300,6 +355,8 @@ type SeedBreed = {
   fciNumber: number;
   nameEn: string;
   nameJa: string;
+  groupName: string;
+  fciGroup: string;
   origin: string;
   aliases: SeedBreedAlias[];
   jkcAliases: SeedBreedAlias[];

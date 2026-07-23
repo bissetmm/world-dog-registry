@@ -1,9 +1,11 @@
-import { Controller, Get, Param, Query } from "@nestjs/common";
+import { Controller, Get, Param, Query, UseGuards } from "@nestjs/common";
 import { ImportJobStatus } from "@prisma/client";
+import { AdminApiKeyGuard } from "../../shared/security/admin-api-key.guard";
 import { ImportJobResponseDto } from "./dto/import-job-response.dto";
 import { ImportJobsService } from "./import-jobs.service";
 
 @Controller("import-jobs")
+@UseGuards(AdminApiKeyGuard)
 export class ImportJobsController {
   constructor(private readonly importJobsService: ImportJobsService) {}
 

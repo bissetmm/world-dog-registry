@@ -128,4 +128,101 @@ describe("AkcPopularityRankingParser", () => {
       },
     ]);
   });
+
+  it("parses older AKC text rows where breed names precede ranks", () => {
+    const parser = new AkcPopularityRankingParser();
+    const rows = parser.parse(
+      `
+        <main>
+          <h1>Most Popular Dog Breeds of 2021</h1>
+          <p>BREED 2021</p>
+          <p>Retrievers (Labrador) 1</p>
+          <p>Retrievers (Golden) 3</p>
+          <p>Retrievers (Chesapeake Bay) 48</p>
+          <p>Retrievers (Nova Scotia Duck Tolling) 92</p>
+          <p>Retrievers (Flat-Coated) 93</p>
+          <p>Retrievers (Curly-Coated) 167</p>
+        </main>
+      `,
+      2021,
+    );
+
+    expect(rows).toEqual([
+      {
+        sourceClubCode: "AKC",
+        year: 2021,
+        breedName: "Retrievers (Labrador)",
+        rank: 1,
+        rawText: "Retrievers (Labrador) 1",
+      },
+      {
+        sourceClubCode: "AKC",
+        year: 2021,
+        breedName: "Retrievers (Golden)",
+        rank: 3,
+        rawText: "Retrievers (Golden) 3",
+      },
+      {
+        sourceClubCode: "AKC",
+        year: 2021,
+        breedName: "Retrievers (Chesapeake Bay)",
+        rank: 48,
+        rawText: "Retrievers (Chesapeake Bay) 48",
+      },
+      {
+        sourceClubCode: "AKC",
+        year: 2021,
+        breedName: "Retrievers (Nova Scotia Duck Tolling)",
+        rank: 92,
+        rawText: "Retrievers (Nova Scotia Duck Tolling) 92",
+      },
+      {
+        sourceClubCode: "AKC",
+        year: 2021,
+        breedName: "Retrievers (Flat-Coated)",
+        rank: 93,
+        rawText: "Retrievers (Flat-Coated) 93",
+      },
+      {
+        sourceClubCode: "AKC",
+        year: 2021,
+        breedName: "Retrievers (Curly-Coated)",
+        rank: 167,
+        rawText: "Retrievers (Curly-Coated) 167",
+      },
+    ]);
+  });
+
+  it("parses older AKC table rows where breed names precede ranks", () => {
+    const parser = new AkcPopularityRankingParser();
+    const rows = parser.parse(
+      `
+        <table>
+          <tbody>
+            <tr><td>Breed</td><td>2020 Rank</td></tr>
+            <tr><td>Retrievers (Labrador)</td><td>1</td></tr>
+            <tr><td>Retrievers (Flat-Coated)</td><td>102</td></tr>
+          </tbody>
+        </table>
+      `,
+      2020,
+    );
+
+    expect(rows).toEqual([
+      {
+        sourceClubCode: "AKC",
+        year: 2020,
+        breedName: "Retrievers (Labrador)",
+        rank: 1,
+        rawText: "Retrievers (Labrador) | 1",
+      },
+      {
+        sourceClubCode: "AKC",
+        year: 2020,
+        breedName: "Retrievers (Flat-Coated)",
+        rank: 102,
+        rawText: "Retrievers (Flat-Coated) | 102",
+      },
+    ]);
+  });
 });

@@ -33,21 +33,35 @@ const AKC_RANKING_PAGES = [
     year: 2022,
     url: "https://www.akc.org/expert-advice/dog-breeds/most-popular-dog-breeds-2022/",
   },
+  {
+    year: 2021,
+    url: "https://www.akc.org/expert-advice/dog-breeds/most-popular-dog-breeds-of-2021/",
+  },
+  {
+    year: 2020,
+    url: "https://www.akc.org/expert-advice/dog-breeds/the-most-popular-dog-breeds-of-2020/",
+  },
 ];
 
 const RETRIEVER_BREED_NAME_KEYS = new Set([
   "chesapeakebayretriever",
   "chesapeakebayretrievers",
+  "retrieverschesapeakebay",
   "curlycoatedretriever",
   "curlycoatedretrievers",
+  "retrieverscurlycoated",
   "flatcoatedretriever",
   "flatcoatedretrievers",
+  "retrieversflatcoated",
   "goldenretriever",
   "goldenretrievers",
+  "retrieversgolden",
   "labradorretriever",
   "labradorretrievers",
+  "retrieverslabrador",
   "novascotiaducktollingretriever",
   "novascotiaducktollingretrievers",
+  "retrieversnovascotiaducktolling",
 ]);
 
 type YearImportResult = {
